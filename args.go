@@ -49,6 +49,24 @@ func (f *FlagSet) Int(name string, value int, usage string) *int {
 	return (*int)(v)
 }
 
+func (f *FlagSet) Int64(name string, value int64, usage string) *int64 {
+	v := newInt64Value(value)
+	f.Add(v, name, usage)
+	return (*int64)(v)
+}
+
+func (f *FlagSet) Uint(name string, value uint, usage string) *uint {
+	v := newUintValue(value)
+	f.Add(v, name, usage)
+	return (*uint)(v)
+}
+
+func (f *FlagSet) Uint64(name string, value uint64, usage string) *uint64 {
+	v := newUint64Value(value)
+	f.Add(v, name, usage)
+	return (*uint64)(v)
+}
+
 func (f *FlagSet) Duration(name string, value time.Duration, usage string) *time.Duration {
 	v := newDuration(value)
 	f.Add(v, name, usage)

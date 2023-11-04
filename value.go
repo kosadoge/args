@@ -51,6 +51,45 @@ func (i *intValue) Set(val string) error {
 	return nil
 }
 
+type int64Value int64
+
+func newInt64Value(val int64) *int64Value { return (*int64Value)(&val) }
+func (i *int64Value) String() string      { return strconv.FormatInt(int64(*i), 10) }
+func (i *int64Value) Set(val string) error {
+	v, err := strconv.ParseInt(val, 0, 64)
+	if err != nil {
+		return err
+	}
+	*i = int64Value(v)
+	return nil
+}
+
+type uintValue uint
+
+func newUintValue(val uint) *uintValue { return (*uintValue)(&val) }
+func (u *uintValue) String() string    { return strconv.FormatUint(uint64(*u), strconv.IntSize) }
+func (u *uintValue) Set(val string) error {
+	v, err := strconv.ParseUint(val, 0, strconv.IntSize)
+	if err != nil {
+		return err
+	}
+	*u = uintValue(v)
+	return nil
+}
+
+type uint64Value uint64
+
+func newUint64Value(val uint64) *uint64Value { return (*uint64Value)(&val) }
+func (u *uint64Value) String() string        { return strconv.FormatUint(uint64(*u), 64) }
+func (u *uint64Value) Set(val string) error {
+	v, err := strconv.ParseUint(val, 0, 64)
+	if err != nil {
+		return err
+	}
+	*u = uint64Value(v)
+	return nil
+}
+
 type durationValue time.Duration
 
 func newDuration(val time.Duration) *durationValue { return (*durationValue)(&val) }
