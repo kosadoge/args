@@ -9,33 +9,31 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type YamlProvider struct {
-	path *string
-}
+func NewYamlProvider(filepath *string) Provider {
+	return func(set func(name, value string) error) error {
+		if filepath == nil || *filepath == "" {
+			return nil
+		}
 
-func (y *YamlProvider) Parse(set func(name, value string) error) error {
-	if y.path == nil || *y.path == "" {
+		f, err := os.Open(*filepath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		d := yaml.NewDecoder(f)
+
+		var obj map[string]any
+		if err := d.Decode(&obj); err != nil && err != io.EOF {
+			return fmt.Errorf("decode yaml config file failed: %w", err)
+		}
+
+		if err := processYamlObject("", obj, set); err != nil {
+			return err
+		}
+
 		return nil
 	}
-
-	f, err := os.Open(*y.path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	d := yaml.NewDecoder(f)
-
-	var obj map[string]any
-	if err := d.Decode(&obj); err != nil && err != io.EOF {
-		return fmt.Errorf("decode yaml config file failed: %w", err)
-	}
-
-	if err := processYamlObject("", obj, set); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func processYamlObject(prevKey string, obj map[string]any, set func(name, value string) error) error {

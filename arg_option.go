@@ -1,6 +1,8 @@
 package args
 
-import "strings"
+import (
+	"strings"
+)
 
 type option = func(*FlagSet)
 
@@ -18,14 +20,10 @@ func EnvPrefix(prefix string) option {
 	}
 }
 
-func Json(path *string) option {
+func Json(filepath *string) option { return UseProvider(NewJsonProvider(filepath)) }
+func Yaml(filepath *string) option { return UseProvider(NewYamlProvider(filepath)) }
+func UseProvider(provider Provider) option {
 	return func(f *FlagSet) {
-		f.providers = append(f.providers, (&JsonProvider{path: path}).Parse)
-	}
-}
-
-func Yaml(path *string) option {
-	return func(f *FlagSet) {
-		f.providers = append(f.providers, (&YamlProvider{path: path}).Parse)
+		f.providers = append(f.providers, provider)
 	}
 }

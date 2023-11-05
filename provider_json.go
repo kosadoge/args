@@ -7,34 +7,32 @@ import (
 	"strconv"
 )
 
-type JsonProvider struct {
-	path *string
-}
+func NewJsonProvider(filepath *string) Provider {
+	return func(set func(name, value string) error) error {
+		if filepath == nil || *filepath == "" {
+			return nil
+		}
 
-func (j *JsonProvider) Parse(set func(name, value string) error) error {
-	if j.path == nil || *j.path == "" {
+		f, err := os.Open(*filepath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		d := json.NewDecoder(f)
+		d.UseNumber()
+
+		var obj map[string]any
+		if err := d.Decode(&obj); err != nil {
+			return fmt.Errorf("decode json config file failed: %w", err)
+		}
+
+		if err := processJsonObject("", obj, set); err != nil {
+			return err
+		}
+
 		return nil
 	}
-
-	f, err := os.Open(*j.path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	d := json.NewDecoder(f)
-	d.UseNumber()
-
-	var obj map[string]any
-	if err := d.Decode(&obj); err != nil {
-		return fmt.Errorf("decode json config file failed: %w", err)
-	}
-
-	if err := processJsonObject("", obj, set); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func processJsonObject(prevKey string, obj map[string]any, set func(name, value string) error) error {
