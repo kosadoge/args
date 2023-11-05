@@ -295,7 +295,7 @@ func (f *FlagSet) parseEnvironment() error {
 		"/", "_",
 	)
 
-	prefix := strings.ToUpper(*f.envPrefix)
+	prefix := *f.envPrefix
 	for name, flag := range f.formal {
 		if _, exists := f.actual[name]; exists {
 			continue
