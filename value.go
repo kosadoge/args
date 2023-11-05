@@ -67,7 +67,7 @@ func (i *int64Value) Set(val string) error {
 type uintValue uint
 
 func newUintValue(val uint) *uintValue { return (*uintValue)(&val) }
-func (u *uintValue) String() string    { return strconv.FormatUint(uint64(*u), strconv.IntSize) }
+func (u *uintValue) String() string    { return strconv.FormatUint(uint64(*u), 10) }
 func (u *uintValue) Set(val string) error {
 	v, err := strconv.ParseUint(val, 0, strconv.IntSize)
 	if err != nil {
@@ -80,7 +80,7 @@ func (u *uintValue) Set(val string) error {
 type uint64Value uint64
 
 func newUint64Value(val uint64) *uint64Value { return (*uint64Value)(&val) }
-func (u *uint64Value) String() string        { return strconv.FormatUint(uint64(*u), 64) }
+func (u *uint64Value) String() string        { return strconv.FormatUint(uint64(*u), 10) }
 func (u *uint64Value) Set(val string) error {
 	v, err := strconv.ParseUint(val, 0, 64)
 	if err != nil {
