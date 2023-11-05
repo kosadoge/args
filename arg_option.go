@@ -20,12 +20,12 @@ func EnvPrefix(prefix string) option {
 
 func Json(path *string) option {
 	return func(f *FlagSet) {
-		f.parsers = append(f.parsers, (&JsonParser{path: path}).Parse)
+		f.providers = append(f.providers, (&JsonProvider{path: path}).Parse)
 	}
 }
 
 func Yaml(path *string) option {
 	return func(f *FlagSet) {
-		f.parsers = append(f.parsers, (&YamlParser{path: path}).Parse)
+		f.providers = append(f.providers, (&YamlProvider{path: path}).Parse)
 	}
 }

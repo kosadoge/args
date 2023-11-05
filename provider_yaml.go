@@ -9,11 +9,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type YamlParser struct {
+type YamlProvider struct {
 	path *string
 }
 
-func (y *YamlParser) Parse(set func(name, value string) error) error {
+func (y *YamlProvider) Parse(set func(name, value string) error) error {
 	if y.path == nil || *y.path == "" {
 		return nil
 	}

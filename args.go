@@ -13,7 +13,7 @@ type FlagSet struct {
 	actual map[string]struct{}
 
 	envPrefix *string
-	parsers   []Parse
+	providers []Provider
 }
 
 type Flag struct {
@@ -151,7 +151,7 @@ func parseName(name string) (long string, short string, err error) {
 	return long, short, nil
 }
 
-type Parse = func(set func(name, value string) error) error
+type Provider = func(set func(name, value string) error) error
 
 func (f *FlagSet) Parse(arguments []string, options ...option) {
 	for i := range options {
@@ -165,8 +165,8 @@ func (f *FlagSet) Parse(arguments []string, options ...option) {
 		panic(err)
 	}
 
-	for _, parser := range f.parsers {
-		err := parser(func(name string, value string) error {
+	for _, provider := range f.providers {
+		err := provider(func(name string, value string) error {
 			if _, exists := f.actual[name]; exists {
 				return nil
 			}

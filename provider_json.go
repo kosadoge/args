@@ -7,11 +7,11 @@ import (
 	"strconv"
 )
 
-type JsonParser struct {
+type JsonProvider struct {
 	path *string
 }
 
-func (j *JsonParser) Parse(set func(name, value string) error) error {
+func (j *JsonProvider) Parse(set func(name, value string) error) error {
 	if j.path == nil || *j.path == "" {
 		return nil
 	}
