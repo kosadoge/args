@@ -3,6 +3,8 @@ package args
 import (
 	"fmt"
 	"os"
+	"reflect"
+	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -243,6 +245,7 @@ func (f *FlagSet) parseCommandLine(arguments []string) error {
 			flag, exists := f.formal[arg]
 			if !exists {
 				if arg == "help" || arg == "h" {
+					f.printUsage()
 					return nil
 				}
 				return fmt.Errorf("flag provided but not defined: %s", arg)
@@ -324,4 +327,128 @@ func (f *FlagSet) parseEnvironment() error {
 	}
 
 	return nil
+}
+
+func (f *FlagSet) printUsage() {
+	type Line struct {
+		flagName string
+		usage    string
+		defValue string
+	}
+
+	var maxLen int
+	flags := sortFlags(f.formal)
+	lines := make([]Line, 0, len(flags))
+	for _, flag := range flags {
+		var b strings.Builder
+		hasShort, hasLong := flag.Short != "", flag.Long != ""
+		switch {
+		case hasShort && hasLong:
+			fmt.Fprintf(&b, "  -%s, --%s", flag.Short, flag.Long)
+		case hasShort && !hasLong:
+			fmt.Fprintf(&b, "  -%s", flag.Short)
+		case !hasShort && hasLong:
+			fmt.Fprintf(&b, "      --%s", flag.Long)
+		default:
+			panic("unexpect flag name case")
+		}
+
+		if b.Len() > maxLen {
+			maxLen = b.Len()
+		}
+
+		var defValue string
+		isZero, err := isZeroValue(flag, flag.DefValue)
+		if err != nil {
+			panic(err)
+		}
+		if !isZero {
+			if _, ok := flag.Value.(*stringValue); ok {
+				defValue = fmt.Sprintf("%q", flag.DefValue)
+			} else {
+				defValue = flag.DefValue
+			}
+		}
+
+		lines = append(lines, Line{
+			flagName: b.String(),
+			usage:    flag.Usage,
+			defValue: defValue,
+		})
+	}
+
+	for _, l := range lines {
+		if gap := maxLen - len(l.flagName); gap > 0 {
+			l.flagName = l.flagName + strings.Repeat(" ", gap)
+		}
+
+		if l.defValue != "" {
+			fmt.Printf("%s\t%s (default %s)\n", l.flagName, l.usage, l.defValue)
+		} else {
+			fmt.Printf("%s\t%s\n", l.flagName, l.usage)
+		}
+	}
+}
+
+func sortFlags(src map[string]*Flag) []*Flag {
+	actual := make(map[string]struct{})
+	flags := make([]*Flag, 0, len(src))
+	for _, flag := range src {
+		if _, exists := actual[flag.Long]; exists {
+			continue
+		}
+		if _, exists := actual[flag.Short]; exists {
+			continue
+		}
+
+		flags = append(flags, flag)
+		if flag.Long != "" {
+			actual[flag.Long] = struct{}{}
+		}
+		if flag.Short != "" {
+			actual[flag.Short] = struct{}{}
+		}
+	}
+
+	sort.Slice(flags, func(i, j int) bool {
+		iname := flags[i].Long
+		if iname == "" {
+			iname = flags[i].Short
+		}
+		jname := flags[j].Long
+		if jname == "" {
+			jname = flags[j].Short
+		}
+		return iname < jname
+	})
+
+	return flags
+}
+
+func isZeroValue(flag *Flag, value string) (ok bool, err error) {
+	typ := reflect.TypeOf(flag.Value)
+	var z reflect.Value
+	if typ.Kind() == reflect.Pointer {
+		z = reflect.New(typ.Elem())
+	} else {
+		z = reflect.Zero(typ)
+	}
+
+	defer func() {
+		if e := recover(); e != nil {
+			if typ.Kind() == reflect.Pointer {
+				typ = typ.Elem()
+			}
+
+			var name string
+			if flag.Long != "" {
+				name = flag.Long
+			} else {
+				name = flag.Short
+			}
+			err = fmt.Errorf("panic calling String method on zero %v for flag %s: %v", typ, name, e)
+		}
+	}()
+
+	return value == z.Interface().(Value).String(), nil
 }
