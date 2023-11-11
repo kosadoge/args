@@ -18,14 +18,6 @@ type FlagSet struct {
 	providers []Provider
 }
 
-type Flag struct {
-	Long     string
-	Short    string
-	Usage    string
-	Value    Value
-	DefValue string
-}
-
 func New() *FlagSet {
 	return &FlagSet{
 		formal: make(map[string]*Flag),
