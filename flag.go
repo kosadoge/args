@@ -1,9 +1,9 @@
 package args
 
 type Flag struct {
-	Long     string
-	Short    string
-	Usage    string
-	Value    Value
-	DefValue string
+	long     string
+	short    string
+	usage    string
+	value    Value
+	defValue string
 }

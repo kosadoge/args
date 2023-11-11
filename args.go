@@ -74,34 +74,34 @@ func (f *FlagSet) Add(value Value, name string, usage string) {
 	}
 
 	flag := Flag{
-		Long:     long,
-		Short:    short,
-		Usage:    usage,
-		Value:    value,
-		DefValue: value.String(),
+		long:     long,
+		short:    short,
+		usage:    usage,
+		value:    value,
+		defValue: value.String(),
 	}
 
-	if flag.Long != "" {
-		if _, exists := f.formal[flag.Long]; exists {
-			panic("long flag redefined: " + flag.Long)
+	if flag.long != "" {
+		if _, exists := f.formal[flag.long]; exists {
+			panic("long flag redefined: " + flag.long)
 		}
-		f.formal[flag.Long] = &flag
+		f.formal[flag.long] = &flag
 	}
 
-	if flag.Short != "" {
-		if _, exists := f.formal[flag.Short]; exists {
-			panic("short flag redefined: " + flag.Short)
+	if flag.short != "" {
+		if _, exists := f.formal[flag.short]; exists {
+			panic("short flag redefined: " + flag.short)
 		}
-		f.formal[flag.Short] = &flag
+		f.formal[flag.short] = &flag
 	}
 }
 
 func (f *FlagSet) addActual(flag *Flag) {
-	if flag.Long != "" {
-		f.actual[flag.Long] = struct{}{}
+	if flag.long != "" {
+		f.actual[flag.long] = struct{}{}
 	}
-	if flag.Short != "" {
-		f.actual[flag.Short] = struct{}{}
+	if flag.short != "" {
+		f.actual[flag.short] = struct{}{}
 	}
 }
 
@@ -169,7 +169,7 @@ func (f *FlagSet) Parse(arguments []string, options ...option) {
 			if !exists {
 				return nil
 			}
-			if err := flag.Value.Set(value); err != nil {
+			if err := flag.value.Set(value); err != nil {
 				return err
 			}
 
@@ -224,10 +224,10 @@ func (f *FlagSet) parseCommandLine(arguments []string) error {
 				if !exists {
 					return fmt.Errorf("flag provide but not defined: %s", part)
 				}
-				if v, ok := flag.Value.(BoolValue); !ok || !v.IsBoolValue() {
+				if v, ok := flag.value.(BoolValue); !ok || !v.IsBoolValue() {
 					return fmt.Errorf("flag not boolean flag: %s", part)
 				}
-				if err := flag.Value.Set("true"); err != nil {
+				if err := flag.value.Set("true"); err != nil {
 					return fmt.Errorf("invalid boolean flag: %s: %v", part, err)
 				}
 
@@ -243,17 +243,17 @@ func (f *FlagSet) parseCommandLine(arguments []string) error {
 				return fmt.Errorf("flag provided but not defined: %s", arg)
 			}
 
-			if v, ok := flag.Value.(BoolValue); ok && v.IsBoolValue() {
+			if v, ok := flag.value.(BoolValue); ok && v.IsBoolValue() {
 				if value == "" && cursor+1 < len(arguments) && arguments[cursor+1][0] != '-' {
 					value = arguments[cursor+1]
 					cursor++
 				}
 				if value != "" {
-					if err := flag.Value.Set(value); err != nil {
+					if err := flag.value.Set(value); err != nil {
 						return fmt.Errorf("invalid boolean value %q for %s: %v", value, arg, err)
 					}
 				} else {
-					if err := flag.Value.Set("true"); err != nil {
+					if err := flag.value.Set("true"); err != nil {
 						return fmt.Errorf("invalid boolean flag %s: %v", arg, err)
 					}
 				}
@@ -265,7 +265,7 @@ func (f *FlagSet) parseCommandLine(arguments []string) error {
 				if value == "" {
 					return fmt.Errorf("flag needs an arguments: %s", arg)
 				}
-				if err := flag.Value.Set(value); err != nil {
+				if err := flag.value.Set(value); err != nil {
 					return fmt.Errorf("invalid value %q for flag: %s: %v", value, arg, err)
 				}
 			}
@@ -297,11 +297,11 @@ func (f *FlagSet) parseEnvironment() error {
 		}
 
 		// ignore short flag
-		if flag.Long == "" {
+		if flag.long == "" {
 			continue
 		}
 
-		key := replacer.Replace(strings.ToUpper(flag.Long))
+		key := replacer.Replace(strings.ToUpper(flag.long))
 		if prefix != "" {
 			key = prefix + key
 		}
@@ -311,7 +311,7 @@ func (f *FlagSet) parseEnvironment() error {
 			continue
 		}
 
-		if err := flag.Value.Set(value); err != nil {
+		if err := flag.value.Set(value); err != nil {
 			return err
 		}
 
@@ -333,14 +333,14 @@ func (f *FlagSet) printUsage() {
 	lines := make([]Line, 0, len(flags))
 	for _, flag := range flags {
 		var b strings.Builder
-		hasShort, hasLong := flag.Short != "", flag.Long != ""
+		hasShort, hasLong := flag.short != "", flag.long != ""
 		switch {
 		case hasShort && hasLong:
-			fmt.Fprintf(&b, "  -%s, --%s", flag.Short, flag.Long)
+			fmt.Fprintf(&b, "  -%s, --%s", flag.short, flag.long)
 		case hasShort && !hasLong:
-			fmt.Fprintf(&b, "  -%s", flag.Short)
+			fmt.Fprintf(&b, "  -%s", flag.short)
 		case !hasShort && hasLong:
-			fmt.Fprintf(&b, "      --%s", flag.Long)
+			fmt.Fprintf(&b, "      --%s", flag.long)
 		default:
 			panic("unexpect flag name case")
 		}
@@ -350,21 +350,21 @@ func (f *FlagSet) printUsage() {
 		}
 
 		var defValue string
-		isZero, err := isZeroValue(flag, flag.DefValue)
+		isZero, err := isZeroValue(flag, flag.defValue)
 		if err != nil {
 			panic(err)
 		}
 		if !isZero {
-			if _, ok := flag.Value.(*stringValue); ok {
-				defValue = fmt.Sprintf("%q", flag.DefValue)
+			if _, ok := flag.value.(*stringValue); ok {
+				defValue = fmt.Sprintf("%q", flag.defValue)
 			} else {
-				defValue = flag.DefValue
+				defValue = flag.defValue
 			}
 		}
 
 		lines = append(lines, Line{
 			flagName: b.String(),
-			usage:    flag.Usage,
+			usage:    flag.usage,
 			defValue: defValue,
 		})
 	}
@@ -386,30 +386,30 @@ func sortFlags(src map[string]*Flag) []*Flag {
 	actual := make(map[string]struct{})
 	flags := make([]*Flag, 0, len(src))
 	for _, flag := range src {
-		if _, exists := actual[flag.Long]; exists {
+		if _, exists := actual[flag.long]; exists {
 			continue
 		}
-		if _, exists := actual[flag.Short]; exists {
+		if _, exists := actual[flag.short]; exists {
 			continue
 		}
 
 		flags = append(flags, flag)
-		if flag.Long != "" {
-			actual[flag.Long] = struct{}{}
+		if flag.long != "" {
+			actual[flag.long] = struct{}{}
 		}
-		if flag.Short != "" {
-			actual[flag.Short] = struct{}{}
+		if flag.short != "" {
+			actual[flag.short] = struct{}{}
 		}
 	}
 
 	sort.Slice(flags, func(i, j int) bool {
-		iname := flags[i].Long
+		iname := flags[i].long
 		if iname == "" {
-			iname = flags[i].Short
+			iname = flags[i].short
 		}
-		jname := flags[j].Long
+		jname := flags[j].long
 		if jname == "" {
-			jname = flags[j].Short
+			jname = flags[j].short
 		}
 		return iname < jname
 	})
@@ -418,7 +418,7 @@ func sortFlags(src map[string]*Flag) []*Flag {
 }
 
 func isZeroValue(flag *Flag, value string) (ok bool, err error) {
-	typ := reflect.TypeOf(flag.Value)
+	typ := reflect.TypeOf(flag.value)
 	var z reflect.Value
 	if typ.Kind() == reflect.Pointer {
 		z = reflect.New(typ.Elem())
@@ -433,10 +433,10 @@ func isZeroValue(flag *Flag, value string) (ok bool, err error) {
 			}
 
 			var name string
-			if flag.Long != "" {
-				name = flag.Long
+			if flag.long != "" {
+				name = flag.long
 			} else {
-				name = flag.Short
+				name = flag.short
 			}
 			err = fmt.Errorf("panic calling String method on zero %v for flag %s: %v", typ, name, e)
 		}
