@@ -10,6 +10,14 @@ import (
 	"unicode"
 )
 
+type Flag struct {
+	long     string
+	short    string
+	usage    string
+	value    Value
+	defValue string
+}
+
 type FlagSet struct {
 	formal map[string]*Flag
 	actual map[string]struct{}
