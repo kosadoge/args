@@ -196,11 +196,11 @@ func (f *FlagSet) parseCommandLine(arguments []string) error {
 			return nil
 		}
 
-		isLongFlag := arg[1] == '-'
-		if isLongFlag {
-			arg = arg[2:]
-		} else {
+		isShortFlag := arg[1] != '-'
+		if isShortFlag {
 			arg = arg[1:]
+		} else {
+			arg = arg[2:]
 		}
 
 		if len(arg) == 0 || arg[0] == '-' || arg[0] == '=' {
@@ -217,7 +217,7 @@ func (f *FlagSet) parseCommandLine(arguments []string) error {
 		}
 
 		// short flag supports multiple boolean flags format like "-abc" means "-a -b -c"
-		if !isLongFlag && len(arg) != 1 {
+		if isShortFlag && len(arg) != 1 {
 			parts := strings.Split(arg, "")
 			for _, part := range parts {
 				flag, exists := f.formal[part]
